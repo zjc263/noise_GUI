@@ -45,7 +45,8 @@ class Main(QMainWindow,Ui_Noise_mainwindow):
        super(Main, self).__init__()
        self.setupUi(self)
        sys.stdout = MyStream(textWritten=self.normalOutputWritten)
-       runfile="runnum.txt"
+       root_dir = os.path.dirname(os.path.abspath('.'))
+       runfile=root_dir+"/runnum.txt"
        f = open(runfile, "r")
        noise_cache.runnum=int(f.read())
        f.close()
@@ -68,10 +69,12 @@ class Main(QMainWindow,Ui_Noise_mainwindow):
       self.textEdit.ensureCursorVisible()        
     def run(self):
         print("start noise acquisition")
-        runfile="runnum.txt"
+        root_dir = os.path.dirname(os.path.abspath('.'))
+        runfile=root_dir+"/runnum.txt"
         f = open(runfile, "r")
-        noise_cache.runnum=int(f.read())
+        runnum=int(f.read())
         f.close()
+
         noise_cache.runnum+=1
         self.lcdNumber.display(int(noise_cache.runnum))
         self.get_paramaters()
@@ -104,13 +107,15 @@ class Main(QMainWindow,Ui_Noise_mainwindow):
         noise_space=noise_cache.noise_space
         triggermode=noise_cache.trigger_mode
         slice_len=noise_cache.slice_len
+        decimation=noise_cache.decimation
+        thresholdmode=noise_cache.threshold_mode
         alpha=noise_cache.alpha
         trigger =u.infn(realrate,threshold,slice_len,noise_space,triggermode,decimation,thresholdmode,alpha=alpha)
         
         
         
         
-        noise_filename= u.Get_noise(noise_cache.tones, measure_t = noise_cache.time, rate =noise_cache.sampling_rate, decimation = noise_cache.decimation, amplitudes =noise_cache.power,RF =noise_cache.lo, output_filename = noise_cache.runnum, Front_end = "A",Device = None, delay = None,pf_average = pf, tx_gain = noise_cache.tx, rx_gain=noise_cache.rx,mode = "DIRECT", trigger = trigger,tonenum=noise_cache.tone_num)
+        noise_filename= u.Get_noise(noise_cache.tones, measure_t = noise_cache.time, rate =noise_cache.sampling_rate, decimation = noise_cache.decimation, amplitudes =noise_cache.power,RF =noise_cache.lo, output_filename = noise_cache.runnum, Front_end = "A",Device = None, delay = None,pf_average = 4, tx_gain = noise_cache.tx, rx_gain=noise_cache.rx,mode = "DIRECT", trigger = trigger)
         
         
 class tonecfg(QMainWindow,Ui_tonecfg):
@@ -144,7 +149,14 @@ class tonecfg(QMainWindow,Ui_tonecfg):
        noise_cache.tone_num=self.spinBox.value()
        print("tone number is "+str(noise_cache.tone_num)) 
        # for t in range (noise_cache.tone_num):     
-       self.tableWidget.setRowCount(noise_cache.tone_num)   
+       self.tableWidget.setRowCount(noise_cache.tone_num)
+       for r in range(noise_cache.tone_num):
+           threshold = QTableWidgetItem("4")
+           alpha = QTableWidgetItem("0")
+           power = QTableWidgetItem("1")             
+           self.tableWidget.setItem(r,2,threshold)
+           self.tableWidget.setItem(r,3,alpha)
+           self.tableWidget.setItem(r,4,power)       
     def addrow(self):
        count = self.tableWidget.currentRow() 
        self.tableWidget.insertRow(count+1)
